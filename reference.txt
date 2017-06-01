@@ -1,0 +1,20 @@
+--Test remotely (command line) for open port
+telnet ec2-52-90-213-141.compute-1.amazonaws.com 9092
+
+--RaspberryPi
+background task: nohup python3 test_producer.py &
+
+--Opencv
+python virtualenv: workon cv
+
+
+--Kafka endpoint:
+ec2-52-90-213-141.compute-1.amazonaws.com
+Public IP: 52.90.213.141:9092
+
+--Declare new topic:
+/opt/bitnami/kafka/bin/kafka-topics.sh --create --zookeeper 127.0.0.1:2181 --replication-factor 1 --partitions 1 --topic security_images
+--Producer:
+/opt/bitnami/kafka/bin/kafka-console-producer.sh --broker-list 52.90.213.141:9092 --topic security_images
+--Consumer:
+/opt/bitnami/kafka/bin/kafka-console-consumer.sh --zookeeper 127.0.0.1:2181 --topic security_images --from-beginning
