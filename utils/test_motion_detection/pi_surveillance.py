@@ -2,7 +2,7 @@
 # python pi_surveillance.py --conf conf.json
 
 # pacakages
-from pyimagesearch.tempimage import TempImage
+#from pyimagesearch.tempimage import TempImage
 from kafka import SimpleProducer, KafkaClient
 from picamera.array import PiRGBArray
 from picamera import PiCamera
@@ -46,8 +46,7 @@ motionCounter = 0
 
 # capture frames from the camera
 for f in camera.capture_continuous(rawCapture, format="bgr", use_video_port=True):
-	# grab the raw NumPy array representing the image and initialize
-	# the timestamp and occupied/unoccupied text
+	# grab the raw NumPy array representing the image
 	frame = f.array
 	timestamp = datetime.datetime.now()
 	text = "Unoccupied"
@@ -64,9 +63,8 @@ for f in camera.capture_continuous(rawCapture, format="bgr", use_video_port=True
 		rawCapture.truncate(0)
 		continue
 
-	# accumulate the weighted average between the current frame and
-	# previous frames, then compute the difference between the current
-	# frame and running average
+	# accumulate the weighted average between the current frame and previous frames, then compute
+	# the difference between the current frame and running average
 	cv2.accumulateWeighted(gray, avg, 0.5)
 	frameDelta = cv2.absdiff(gray, cv2.convertScaleAbs(avg))
 
@@ -84,8 +82,7 @@ for f in camera.capture_continuous(rawCapture, format="bgr", use_video_port=True
 		if cv2.contourArea(c) < conf["min_area"]:
 			continue
 
-		# compute the bounding box for the contour, draw it on the frame,
-		# and update the text
+		# compute the bounding box for the contour, draw it on the frame, and update the text
 		(x, y, w, h) = cv2.boundingRect(c)
 		cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
 		text = "Occupied"
@@ -104,8 +101,7 @@ for f in camera.capture_continuous(rawCapture, format="bgr", use_video_port=True
 			# increment the motion counter
 			motionCounter += 1
 
-			# check to see if the number of frames with consistent motion is
-			# high enough
+			# check to see if the number of frames with consistent motion is high enough
 			if motionCounter >= conf["min_motion_frames"]:
 				# check to see if dropbox sohuld be used
 				
@@ -113,19 +109,16 @@ for f in camera.capture_continuous(rawCapture, format="bgr", use_video_port=True
 					# write the image to temporary file
 					#t = TempImage()
 					#cv2.imwrite(t.path, frame)
-
-					# upload the image to Dropbox and cleanup the tempory image
-					print("[UPLOAD] {}".format(ts))
 					#path = "{base_path}/{timestamp}.jpg".format(
 						#base_path=conf["dropbox_base_path"], timestamp=ts)
 					#client.put_file(path, open(t.path, "rb"))
 					#t.cleanup()
 
 					# upload unaltered frame
-					producer.send_messages(conf["kafka_topic"], f.array.tobytes())
+					print("[UPLOAD] {}".format(ts))
+					#producer.send_messages(conf["kafka_topic"], f.array.tobytes())
 				
-				# update the last uploaded timestamp and reset the motion
-				# counter
+				# update the last uploaded timestamp and reset the motion counter
 				lastUploaded = timestamp
 				motionCounter = 0
 
