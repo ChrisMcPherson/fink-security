@@ -16,5 +16,5 @@ http://www.pyimagesearch.com/2016/04/18/install-guide-raspberry-pi-3-raspbian-je
 3. Execute Python script:
 
 ```sh
-$ python pi_surveillance.py --conf conf.json
+$ python test_pi_surveillance.py --conf conf.json
 ```
