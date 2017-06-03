@@ -8,7 +8,7 @@ Fink Security is a system of edge data collectors in the home coming together to
 
 ***
 
-Fink Security will support a wide array of security collectors, such as:
+Fink Security will support a wide array of data collectors, such as:
 
 - Facial recognition 
 - License plate recognition
@@ -18,4 +18,4 @@ Fink Security will support a wide array of security collectors, such as:
 
 ***
 
-Using reinforcement learning techniques, Fink Security has been trained to learn what combinations of events ingested from the security collectors are indicative of an active threat. 
+Using reinforcement learning techniques, Fink Security has been trained to learn what combinations of events ingested from the data collectors are indicative of an active threat. 
