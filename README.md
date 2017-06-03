@@ -1,6 +1,6 @@
 # fink-security
 
-~~Fink: to inform on to the authorities.~~
+*Fink: to inform on to the authorities.*
 
 ***
 
