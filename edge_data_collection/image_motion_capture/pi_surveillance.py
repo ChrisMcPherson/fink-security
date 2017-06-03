@@ -2,7 +2,6 @@
 # python pi_surveillance.py --conf conf.json
 
 # pacakages
-from pyimagesearch.tempimage import TempImage
 from kafka import SimpleProducer, KafkaClient
 from picamera.array import PiRGBArray
 from picamera import PiCamera
@@ -20,11 +19,9 @@ ap.add_argument("-c", "--conf", required=True,
 	help="path to configuration file")
 args = vars(ap.parse_args())
 
-
 # filter warnings, load the configuration
 warnings.filterwarnings("ignore")
 conf = json.load(open(args["conf"]))
-#client = None
 
 # kafka initialization
 kafka = KafkaClient(conf["kafka_client"])
@@ -48,7 +45,7 @@ for f in camera.capture_continuous(raw_capture, format="bgr", use_video_port=Tru
 	# grab the raw NumPy array representing the image
 	frame = f.array
 	timestamp = datetime.datetime.now()
-	text = "Unoccupied"
+	status = "Unoccupied"
 
 	# resize the frame, convert it to grayscale, and blur it
 	frame = imutils.resize(frame, width=500)
@@ -79,41 +76,21 @@ for f in camera.capture_continuous(raw_capture, format="bgr", use_video_port=Tru
 		if cv2.contourArea(c) < conf["min_area"]:
 			continue
 
-		# compute the bounding box for the contour, draw it on the frame, and update the text
-		#(x, y, w, h) = cv2.boundingRect(c)
-		#cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
-		text = "Occupied"
-
-	# draw the text and timestamp on the frame
-	#ts = timestamp.strftime("%A %d %B %Y %I:%M:%S%p")
-	#cv2.putText(frame, "Room Status: {}".format(text), (10, 20),
-		#cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
-	#cv2.putText(frame, ts, (10, frame.shape[0] - 10), cv2.FONT_HERSHEY_SIMPLEX,
-		#0.35, (0, 0, 255), 1)
+		status = "Occupied"
 
 	# check to see if the room is occupied
-	if text == "Occupied":
+	if status == "Occupied":
 		# check to see if enough time has passed between uploads
 		if (timestamp - last_updated).seconds >= conf["min_upload_seconds"]:
 			# increment the motion counter
 			motion_counter += 1
-
 			# check to see if the number of frames with consistent motion is high enough
 			if motion_counter >= conf["min_motion_frames"]:
 				if conf["use_kafka"]:
-					# write the image to temporary file
-					#t = TempImage()
-					#cv2.imwrite(t.path, frame)
-
-					# upload the image to Dropbox and cleanup the tempory image
-					#path = "{base_path}/{timestamp}.jpg".format(
-						#base_path=conf["dropbox_base_path"], timestamp=ts)
-					#client.put_file(path, open(t.path, "rb"))
-					#t.cleanup()
-					
 					# upload unaltered frame
+					ts = timestamp.strftime("%A %d %B %Y %I:%M:%S%p")
 					print("[UPLOAD] {}".format(ts))
-					png = img_str = cv2.imencode('.png', f)
+					ret, png = img_str = cv2.imencode('.png', f.array)
 					producer.send_messages(conf["kafka_topic"], png.tobytes())
 				
 				# update the last uploaded timestamp and reset the motion counter
@@ -123,16 +100,6 @@ for f in camera.capture_continuous(raw_capture, format="bgr", use_video_port=Tru
 	# otherwise, the room is not occupied
 	else:
 		motion_counter = 0
-
-	# check to see if the frames should be displayed to screen
-	if conf["show_video"]:
-		# display the security feed
-		cv2.imshow("Security Feed", frame)
-		key = cv2.waitKey(1) & 0xFF
-
-		# if the `q` key is pressed, break from the lop
-		if key == ord("q"):
-			break
 
 	# clear the stream in preparation for the next frame
 	raw_capture.truncate(0)

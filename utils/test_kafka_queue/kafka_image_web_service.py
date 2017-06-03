@@ -1,7 +1,10 @@
 from flask import Flask, Response
 from kafka import KafkaConsumer
+
 #connect to Kafka server and pass the topic we want to consume
-consumer = KafkaConsumer('security_images', group_id='view', bootstrap_servers=['52.90.213.141:9092'])
+consumer = KafkaConsumer('test_images', group_id=None, bootstrap_servers=['52.90.213.141:9092']
+                                    ,auto_offset_reset='earliest')
+
 #Continuously listen to the connection and print messages as recieved
 app = Flask(__name__)
 

@@ -13,7 +13,7 @@ ec2-52-90-213-141.compute-1.amazonaws.com
 Public IP: 52.90.213.141:9092
 
 --Declare new topic:
-/opt/bitnami/kafka/bin/kafka-topics.sh --create --zookeeper 127.0.0.1:2181 --replication-factor 1 --partitions 1 --topic security_images
+/opt/bitnami/kafka/bin/kafka-topics.sh --create --zookeeper 127.0.0.1:2181 --replication-factor 1 --partitions 1 --topic test_images
 --Producer:
 /opt/bitnami/kafka/bin/kafka-console-producer.sh --broker-list 52.90.213.141:9092 --topic security_images
 --Consumer:
