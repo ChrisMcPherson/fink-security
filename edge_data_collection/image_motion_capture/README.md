@@ -1,5 +1,5 @@
 ## Edge Motion Detection
-Capture frames where motion was detected from an edge data collector (tested on a Raspberry Pi) and send them to a Kafka queue for further processing.
+Capture frames on an edge data collector (tested on a Raspberry Pi) and, where motion was detected, upload them to a Kafka queue for further processing.
 
 Install libraries with:
 ```sh
