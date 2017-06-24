@@ -17,7 +17,7 @@ conf = json.load(open(args["conf"]))
 
 # Load models
 face_cascade = cv2.CascadeClassifier('./models/haarcascade_frontalface_default.xml')
-body_cascade = cv2.CascadeClassifier('./models/haarcascade_upperbody.xml')
+body_cascade = cv2.CascadeClassifier('./models/haarcascade_fullbody.xml')
 
 
 def main():

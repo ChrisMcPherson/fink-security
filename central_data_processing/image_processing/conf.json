@@ -1,6 +1,6 @@
 {
 	"test": true,
-	"test_image": "./test_images/small_face.jpg",
+	"test_image": "./test_images/body.jpg",
 	"kafka_client": "52.90.213.141:9092",
 	"kafka_topic": "test_images"
 }

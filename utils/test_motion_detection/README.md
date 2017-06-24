@@ -9,7 +9,7 @@ The Raspberry pi should also be equipped with OpenCV. Follow this guide to get s
 http://www.pyimagesearch.com/2016/04/18/install-guide-raspberry-pi-3-raspbian-jessie-opencv-3/
 
 ### Instructions
-1. SSH into your RaspberryPi through an interface that supports X11 (PUTTY on Windows has been tested to work with the X11 PUTTY functionality toggled on)
+1. SSH into your RaspberryPi through an interface that supports X11 (PUTTY on Windows has been tested to work with X11 forwarding toggled on and XMing Windows client installed)
 
 2. Modify the config file with preferences or run as is
 
