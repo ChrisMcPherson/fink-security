@@ -1,3 +1,4 @@
+from facial_recognition import FaceRecognition
 import numpy as np
 import cv2
 from kafka import KafkaConsumer
@@ -56,6 +57,10 @@ def detect_faces(img):
             cv2.imshow('img',face_crop)
             cv2.waitKey(0)
             cv2.destroyAllWindows()
+
+            # match face with known faces
+            face_recognition = FaceRecognition()
+            face_recognition.compare_face(face_crop)
     else:
         print('There were no faces found')
 
