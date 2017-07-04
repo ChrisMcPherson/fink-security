@@ -1,0 +1,10 @@
+{"namespace": "fink.security",
+ "type": "record",
+ "name": "image",
+ "fields": [
+     {"name": "frame", "type": "bytes"},
+     {"name": "timestamp",  "type": "string"},
+     {"name": "house", "type": "int"},
+     {"name": "unit", "type": "int"}
+ ]
+}

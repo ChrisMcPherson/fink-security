@@ -1,11 +1,14 @@
 # USAGE
 # python pi_surveillance.py --conf conf.json
 
-# pacakages
+# packages
+import avro.schema
+import avro.io
 from kafka import SimpleProducer, KafkaClient
 from picamera.array import PiRGBArray
 from picamera import PiCamera
 import argparse
+import io
 import warnings
 import datetime
 import imutils
@@ -26,6 +29,11 @@ conf = json.load(open(args["conf"]))
 # kafka initialization
 kafka = KafkaClient(conf["kafka_client"])
 producer = SimpleProducer(kafka)
+
+# Avro initialization
+avro_schema = avro.schema.Parse(open("image_schema.avsc").read())
+house_id = 1
+unit_id = 1
 
 # initialize the camera and grab a reference to the raw camera capture
 camera = PiCamera()
@@ -91,7 +99,14 @@ for f in camera.capture_continuous(raw_capture, format="bgr", use_video_port=Tru
 					ts = timestamp.strftime("%A %d %B %Y %I:%M:%S%p")
 					print("[UPLOAD] {}".format(ts))
 					ret, png = img_str = cv2.imencode('.png', f.array)
-					producer.send_messages(conf["kafka_topic"], png.tobytes())
+					# write out to Avro in byte format
+					writer = avro.io.DatumWriter(avro_schema)
+					bytes_writer = io.BytesIO()
+					encoder = avro.io.BinaryEncoder(bytes_writer)
+					writer.write({"frame": png.tobytes(), "timestamp": ts, "house": house_id, "unit": unit_id}, encoder)
+					raw_bytes = bytes_writer.getvalue()
+					#producer.send_messages(conf["kafka_topic"], png.tobytes())
+					producer.send_messages(conf["kafka_topic"], raw_bytes)
 				
 				# update the last uploaded timestamp and reset the motion counter
 				last_uploaded = timestamp
