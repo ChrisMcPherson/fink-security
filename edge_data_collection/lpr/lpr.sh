@@ -1,0 +1,1 @@
+for i in *.jpg; do alpr "$i" -j > lpr_results.json; done
