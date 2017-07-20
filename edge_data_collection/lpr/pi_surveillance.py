@@ -81,50 +81,52 @@ for f in camera.capture_continuous(rawCapture, format="bgr", use_video_port=True
     #cv2.putText(frame, ts, (10, frame.shape[0] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.35, (0, 0, 255), 1)
 
     if text == "Occupied":
-       motionCounter += 1
+        motionCounter += 1
 
-       if motionCounter >= conf["min_motion_frames"]:
-           t = TempImage()
-           cv2.imwrite(t.path, frame)
-           motionCounter = 0
-          # SEND IMAGE ADN LPR RESULTS TO KAFKA VIA AVRo
-           subprocess.call("./lpr.sh", shell=True)
-           if conf["use_kafka"]:
-               ts = timestamp.strftime("%A %d %B %Y %I:%M:%S%p")
-               print("[UPLOAD] {}".format(ts))
-               ret, t  = img_str = cv2.imencode('.png',f.array)
+    if motionCounter >= conf["min_motion_frames"]:
+        t = TempImage()
+        cv2.imwrite(t.path, frame)
+        motionCounter = 0
+        # SEND IMAGE ADN LPR RESULTS TO KAFKA VIA AVRo
+        subprocess.call("./lpr.sh", shell=True)
+        if conf["use_kafka"]:
+            ts = timestamp.strftime("%A %d %B %Y %I:%M:%S%p")
+            print("[UPLOAD] {}".format(ts))
+            ret, t  = img_str = cv2.imencode('.png', f.array)
 
-               with open('lpr_results.txt') as f:
-                   lpr_results = f.readlines()
+            with open('lpr_results.txt') as f:
+                lpr_results = f.readlines()
 
-               # Remove whitespace
-               lpr_results = [x.strip() for x in lpr_results]
+            # Remove whitespace
+            lpr_results = [x.strip() for x in lpr_results]
 
-               print(lpr_results)
-               # Check for no license plate results in imag
-               if lpr_results[0] == 'No license plates found.':
-                   rawCapture.truncate(0)
-                   continue
-               else:
-                   lpr = lpr_results[1]
+            print(lpr_results)
+            # Check for no license plate results in imag
+            if lpr_results[0] == 'No license plates found.':
+                rawCapture.truncate(0)
+                continue
+            else:
+                lpr = lpr_results[1]
 
-               lpr_list = lpr.split(" ")
-               license_plate = lpr_list[1]
-               confidence = lpr_list[-1]
+            lpr_list = lpr.split(" ")
+            license_plate = lpr_list[1]
+            confidence = lpr_list[-1]
 
-               print(license_plate)
+            print(license_plate)
 
-               # write to Avro in byte format
-               writer = avro.io.DatumWriter(avro_schema)
-               bytes_writer = io.BytesIO()
-               encoder = avro.io.BinaryEncoder(bytes_writer)
-              # Send everything to Kafka via Avro
-               writer.write({"frame": t.tobytes(), "timestamp": ts, "house": house_id, "unit": unit_id, "license_plate": license_plate, "confidence": confidence}, encoder)
+            # write to Avro in byte format
+            writer = avro.io.DatumWriter(avro_schema)
+            bytes_writer = io.BytesIO()
+            encoder = avro.io.BinaryEncoder(bytes_writer)
+            # Send everything to Kafka via Avro
+            writer.write({"frame": t.tobytes(), "timestamp": ts, "house": house_id, "unit": unit_id, "license_plate": license_plate, "confidence": confidence}, encoder)
+            raw_bytes = bytes_writer.getvalue()
+            producer.send_messages(conf["kafka_topic"], raw_bytes)
 
-           filelist = [ f for f in os.listdir(".") if f.endswith(".jpg") ]
-           for f in filelist:
-               os.remove(f)
-           os.remove("lpr_results.txt")
+        filelist = [ f for f in os.listdir(".") if f.endswith(".jpg") ]
+        for f in filelist:
+            os.remove(f)
+        os.remove("lpr_results.txt")
 
     else:
         motionCounter = 0

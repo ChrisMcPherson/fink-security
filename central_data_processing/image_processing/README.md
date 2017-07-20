@@ -7,7 +7,7 @@ With various edge nodes producing data and loading it to a Kafka queue, this act
 2. Run script:
 
 ```sh
-$ python object_detection.py --conf conf.json
+$ python3 object_detection.py --conf conf.json
 ```
 
 

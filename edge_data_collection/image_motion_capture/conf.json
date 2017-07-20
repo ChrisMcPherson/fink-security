@@ -4,7 +4,7 @@
 	"kafka_topic": "test_avro",
 	"min_upload_seconds": 3.0,
 	"min_motion_frames": 2,
-	"camera_warmup_time": 4.5,
+	"camera_warmup_time": 2.5,
 	"delta_thresh": 5,
 	"resolution": [640, 480],
 	"fps": 16,

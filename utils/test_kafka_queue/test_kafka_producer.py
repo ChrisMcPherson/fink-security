@@ -3,5 +3,5 @@ from kafka import SimpleProducer, KafkaClient
 
 kafka = KafkaClient('52.90.213.141:9092')
 producer = SimpleProducer(kafka)
-topic = 'security_images'
+topic = 'test_alpr'
 producer.send_messages(topic, b"spam")
