@@ -7,6 +7,7 @@ from kafka import SimpleProducer, KafkaClient
 from pyimagesearch.tempimage import TempImage
 from picamera.array import PiRGBArray
 from picamera import PiCamera
+import io
 import argparse
 import warnings
 import datetime
@@ -15,6 +16,7 @@ import json
 import time
 import cv2
 import subprocess
+import os
 
 ap = argparse.ArgumentParser()
 ap.add_argument("-c", "--conf", required=True, help="path to the JSON configuration file")
@@ -42,7 +44,6 @@ print ("[INFO] warming up...")
 time.sleep(conf["camera_warmup_time"])
 avg = None
 motionCounter = 0
-
 
 for f in camera.capture_continuous(rawCapture, format="bgr", use_video_port=True):
     frame = f.array
@@ -86,19 +87,44 @@ for f in camera.capture_continuous(rawCapture, format="bgr", use_video_port=True
            t = TempImage()
            cv2.imwrite(t.path, frame)
            motionCounter = 0
-       ########## THIS IS WHERE I WILL EITHER SEND IMAGE TO CLOUD FOR LPR OR CALL ANOTHER SCRIPT TO RUN OPENALPR
+          # SEND IMAGE ADN LPR RESULTS TO KAFKA VIA AVRo
            subprocess.call("./lpr.sh", shell=True)
            if conf["use_kafka"]:
                ts = timestamp.strftime("%A %d %B %Y %I:%M:%S%p")
                print("[UPLOAD] {}".format(ts))
-               ret, png = img_str = cv2.imencode('.png',f.array)
+               ret, t  = img_str = cv2.imencode('.png',f.array)
+
+               with open('lpr_results.txt') as f:
+                   lpr_results = f.readlines()
+
+               # Remove whitespace
+               lpr_results = [x.strip() for x in lpr_results]
+
+               print(lpr_results)
+               # Check for no license plate results in imag
+               if lpr_results[0] == 'No license plates found.':
+                   rawCapture.truncate(0)
+                   continue
+               else:
+                   lpr = lpr_results[1]
+
+               lpr_list = lpr.split(" ")
+               license_plate = lpr_list[1]
+               confidence = lpr_list[-1]
+
+               print(license_plate)
+
                # write to Avro in byte format
                writer = avro.io.DatumWriter(avro_schema)
                bytes_writer = io.BytesIO()
                encoder = avro.io.BinaryEncoder(bytes_writer)
-               ##### I need to convert the json file to bytes and put in function call below...
-               writer.write({"frame": t.tobytes(), "timestamp": ts, "house": house_id, "unit": unit_id}, encoder)
-         #t.cleanup()
+              # Send everything to Kafka via Avro
+               writer.write({"frame": t.tobytes(), "timestamp": ts, "house": house_id, "unit": unit_id, "license_plate": license_plate, "confidence": confidence}, encoder)
+
+           filelist = [ f for f in os.listdir(".") if f.endswith(".jpg") ]
+           for f in filelist:
+               os.remove(f)
+           os.remove("lpr_results.txt")
 
     else:
         motionCounter = 0

@@ -6,6 +6,7 @@
      {"name": "timestamp",  "type": "string"},
      {"name": "house", "type": "int"},
      {"name": "unit", "type": "int"},
-     {"name": "license_plate", "type": "bytes"}
+     {"name": "license_plate", "type": "string"},
+     {"name": "confidence", "type": "string"}
 ]
 }
