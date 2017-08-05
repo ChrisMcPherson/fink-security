@@ -28,14 +28,14 @@ class ProcessRecord:
     ## process_image
     def image(self,recordData):
         ### encode
-        faceEmbedding = self.embed_face(recordData['img'])
+        faceEmbedding, faceEmbeddingFull = self.embed_face(recordData['img'])
         recordHash = self.make_recordHash(recordData['unit_hash'])
         resourceHash = self.make_resourceHash(recordHash)
 
         self.db_connect()
         ### identify closest entity (0 if new): once we have sufficient samples
         self.cursor.execute('insert into public.records ( record_hash,  unit_hash) VALUES(%s, %s) ', (recordHash,recordData['unit_hash']))
-        self.cursor.execute('insert into public.faces ( resource_hash, record_hash, embedding) VALUES( %s, %s, cube(%s)) ', (resourceHash, recordHash,faceEmbedding.tolist()))
+        self.cursor.execute('insert into public.faces ( resource_hash, record_hash, embedding, embedding_full) VALUES( %s, %s, cube(%s), %s) ', (resourceHash, recordHash,faceEmbedding.tolist(),faceEmbeddingFull.tolist()))
         self.db_finish()
 
     ## process_lp
@@ -65,7 +65,7 @@ class ProcessRecord:
         newFaceEmbedding = face_recognition.face_encodings(newFace)[0].reshape(1, -1)
         svdFaceEmbedding = self.SVD(newFaceEmbedding)
         svdFaceEmbeddingNorm = preprocessing.normalize(svdFaceEmbedding, norm='l2')
-        return svdFaceEmbeddingNorm
+        return svdFaceEmbeddingNorm, newFaceEmbedding[0]
 
     def make_recordHash(self, unitHash):
         # build record hash from unit / timestamp
