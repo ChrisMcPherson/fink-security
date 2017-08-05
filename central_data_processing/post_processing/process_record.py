@@ -32,20 +32,20 @@ class ProcessRecord:
 
         #build record hash from unit / timestamp
         m = hashlib.md5()
-        m.update(recordData['unit_hash'])
-        m.update('{0!s}'.format(time.time()).encode('utf-8'))
-        recordHash = m.hexdigest().encode('utf-8')
+        m.update(recordData['unit_hash'].encode('utf8'))
+        m.update(u'{0!s}'.format(time.time()).encode('utf-8'))
+        recordHash = m.hexdigest()
 
         #build resource hash from record_hash / 01: placeholder for multiple faces per record
         m = hashlib.md5()
-        m.update(recordHash)
-        m.update('{0!s}'.format(1).encode('utf-8'))
+        m.update(recordHash.encode('utf8'))
+        m.update(u'{0!s}'.format(1).encode('utf-8'))
         resourceHash = m.hexdigest()
 
         self.db_connect()
         ### identify closest entity (0 if new): once we have sufficient samples
-        self.cursor.execute('insert into public.records ( record_hash,  unit_hash) VALUES({%s}, {%s}) '.format(recordHash,recordData['unit_hash']))
-        self.cursor.execute('insert into public.faces ( resource_hash, record_hash, embedding) VALUES( {}, {}, {}) '.format(resourceHash, recordHash,self.lst2pgarr(faceEmbedding)))
+        self.cursor.execute('insert into public.records ( record_hash,  unit_hash) VALUES(%s, %s) ', (recordHash,recordData['unit_hash']))
+        self.cursor.execute('insert into public.faces ( resource_hash, record_hash, embedding) VALUES( %s, %s, cube(%s)) ', (resourceHash, recordHash,faceEmbedding.tolist()))
 
         self.db_finish()
 
@@ -121,7 +121,7 @@ def main(test=False):
     if test:
         #recordHandler.makeSVD()
         img =  face_recognition.load_image_file('/home/chrisc/Pictures/faces/f0.jpg')
-        recordHandler.process('image',{'img':img,'unit_hash':'dc5c7986daef50c1e02ab09b442ee34f'.encode('utf-8')})
+        recordHandler.process('image',{'img':img,'unit_hash':u'dc5c7986daef50c1e02ab09b442ee34f'})
 
 if __name__ == '__main__':
     main(True)
