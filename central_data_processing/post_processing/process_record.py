@@ -29,33 +29,36 @@ class ProcessRecord:
     def image(self,recordData):
         ### encode
         faceEmbedding = self.embed_face(recordData['img'])
-
-        #build record hash from unit / timestamp
-        m = hashlib.md5()
-        m.update(recordData['unit_hash'].encode('utf8'))
-        m.update(u'{0!s}'.format(time.time()).encode('utf-8'))
-        recordHash = m.hexdigest()
-
-        #build resource hash from record_hash / 01: placeholder for multiple faces per record
-        m = hashlib.md5()
-        m.update(recordHash.encode('utf8'))
-        m.update(u'{0!s}'.format(1).encode('utf-8'))
-        resourceHash = m.hexdigest()
+        recordHash = self.make_recordHash(recordData['unit_hash'])
+        resourceHash = self.make_resourceHash(recordHash)
 
         self.db_connect()
         ### identify closest entity (0 if new): once we have sufficient samples
         self.cursor.execute('insert into public.records ( record_hash,  unit_hash) VALUES(%s, %s) ', (recordHash,recordData['unit_hash']))
         self.cursor.execute('insert into public.faces ( resource_hash, record_hash, embedding) VALUES( %s, %s, cube(%s)) ', (resourceHash, recordHash,faceEmbedding.tolist()))
-
         self.db_finish()
 
     ## process_lp
     def lp(self,recordData):
-        pass
+        recordHash = self.make_recordHash(recordData['unit_hash'])
+        resourceHash = self.make_resourceHash(recordHash)
+
+        self.db_connect()
+        ### identify closest entity (0 if new): once we have sufficient samples
+        self.cursor.execute('insert into public.records ( record_hash,  unit_hash) VALUES(%s, %s) ', (recordHash,recordData['unit_hash']))
+        self.cursor.execute('insert into public.license_plates ( resource_hash, record_hash, embedding) VALUES( %s, %s, %s) ', (resourceHash, recordHash,recordData['lp']))
+        self.db_finish()
 
     ## process_mac
     def mac(self,recordData):
-        pass
+        recordHash = self.make_recordHash(recordData['unit_hash'])
+        resourceHash = self.make_resourceHash(recordHash)
+
+        self.db_connect()
+        ### identify closest entity (0 if new): once we have sufficient samples
+        self.cursor.execute('insert into public.records ( record_hash,  unit_hash) VALUES(%s, %s) ', (recordHash,recordData['unit_hash']))
+        self.cursor.execute('insert into public.macs ( resource_hash, record_hash, embedding) VALUES( %s, %s, %s) ', (resourceHash, recordHash,recordData['mac']))
+        self.db_finish()
 
     ## Face encoding (note, 100 dimension encoding for postgresql indexing
     def embed_face(self,newFace):
@@ -64,6 +67,21 @@ class ProcessRecord:
         svdFaceEmbeddingNorm = preprocessing.normalize(svdFaceEmbedding, norm='l2')
         return svdFaceEmbeddingNorm
 
+    def make_recordHash(self, unitHash):
+        # build record hash from unit / timestamp
+        m = hashlib.md5()
+        m.update(unitHash.encode('utf8'))
+        m.update(u'{0!s}'.format(time.time()).encode('utf-8'))
+        recordHash = m.hexdigest()
+        return recordHash
+
+    def make_resourceHash(self, recordHash):
+        # build resource hash from record_hash / 01: placeholder for multiple faces per record
+        m = hashlib.md5()
+        m.update(recordHash.encode('utf8'))
+        m.update(u'{0!s}'.format(1).encode('utf-8'))
+        resourceHash = m.hexdigest()
+        return resourceHash
 
     def db_connect(self):
         self.connection = psycopg2.connect(host=self.host, user=self.user, password=self.passwd, dbname=self.database, port=self.port_num)
