@@ -31,7 +31,8 @@ kafka = KafkaClient(conf["kafka_client"])
 producer = SimpleProducer(kafka)
 
 # Avro initialization
-avro_schema = avro.schema.Parse(open("image_schema.avsc").read())
+with open("image_schema.avsc") as avro_schema_file:
+	avro_schema = avro.schema.Parse(avro_schema_file.read())
 house_id = 1
 unit_id = 1
 
