@@ -5,7 +5,7 @@ import avro.io
 import io
 
 #connect to Kafka server and pass the topic we want to consume
-consumer = KafkaConsumer('test_avro', group_id=None, bootstrap_servers=['52.90.213.141:9092']
+consumer = KafkaConsumer('demo', group_id=None, bootstrap_servers=['52.90.213.141:9092']
                                     ,auto_offset_reset='earliest')
 
 schema_path="../../edge_data_collection/image_motion_capture/image_schema.avsc"
